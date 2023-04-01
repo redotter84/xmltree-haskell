@@ -18,21 +18,21 @@ parseXml raw = case remainder of
 
 -- | Parse tag attributes
 parseAttrs :: String -> [XmlAttribute]
-parseAttrs "" = []
-parseAttrs s
-    | isSpace $ head s = (parseAttrs . tail) s
-    | otherwise        = case elemIndex '=' s of
-        Nothing  -> throw $ AttributesParsingError $ "No `=` found: " ++ s
+parseAttrs ""              = []
+parseAttrs input
+    | isSpace $ head input = (parseAttrs . tail) input
+    | otherwise            = case elemIndex '=' input of
+        Nothing  -> throw $ AttributesParsingError $ "No `=` found: " ++ input
         Just sep ->
-            if s !! (sep + 1) == '"'
+            if input !! (sep + 1) == '"'
             then
                 let (value, remainder) = next sep
                 in XmlAttribute (key sep) value : parseAttrs remainder
             else
-                throw $ AttributesParsingError $ "No `\"` found" ++ s
+                throw $ AttributesParsingError $ "No `\"` found" ++ input
     where
-        key sep      = take sep s
-        afterSep sep = drop (sep + 2) s
+        key sep      = take sep input
+        afterSep sep = drop (sep + 2) input
         next sep     =
             let valueWithRemainder = afterSep sep
             in case elemIndex '"' valueWithRemainder of
