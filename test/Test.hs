@@ -1,4 +1,4 @@
-import System.Exit
+import System.Exit (exitFailure, exitSuccess)
 import Test.HUnit
 
 import Data.Xml.Parse

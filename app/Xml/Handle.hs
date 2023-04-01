@@ -2,11 +2,11 @@
 
 module Xml.Handle where
 
-import Control.Monad.IO.Class (MonadIO, liftIO)
-import Control.Monad.Reader (MonadReader, asks)
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Reader (ReaderT, asks)
 import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 
-import Data.Xml.Tree
+import Data.Xml.Tree (XmlTree, findXmlTreeAttribute, findXmlTreeChild)
 
 data XmlTreeWithParent = WithParent XmlTree (Maybe XmlTreeWithParent)
 
@@ -23,17 +23,22 @@ data AppEnv = AppEnv {
 newAppEnv :: String -> XmlTree -> IO AppEnv
 newAppEnv invite tree = AppEnv invite <$> newXmlHandle tree
 
-getTreeHandle :: (MonadReader AppEnv m, MonadIO m) => m (IORef XmlTreeWithParent)
+type XmlReaderMonad a = ReaderT AppEnv IO a
+
+getPrompt :: XmlReaderMonad String
+getPrompt = asks prompt
+
+getTreeHandle :: XmlReaderMonad (IORef XmlTreeWithParent)
 getTreeHandle = asks $ getTreeRef . xmlHandle
 
-getTree :: (MonadReader AppEnv m, MonadIO m) => m XmlTree
+getTree :: XmlReaderMonad XmlTree
 getTree = do
     handle <- getTreeHandle
     stored <- liftIO $ readIORef handle
     let (WithParent tree _) = stored
     return tree
 
-moveUp :: (MonadReader AppEnv m, MonadIO m) => m ()
+moveUp :: XmlReaderMonad ()
 moveUp = do
     handle <- getTreeHandle
     stored <- liftIO $ readIORef handle
@@ -42,7 +47,7 @@ moveUp = do
         Nothing         -> error "No way up"
         Just parentTree -> liftIO $ writeIORef handle parentTree
 
-moveDown :: (MonadReader AppEnv m, MonadIO m) => Int -> m ()
+moveDown :: Int -> XmlReaderMonad ()
 moveDown index = do
     handle <- getTreeHandle
     stored <- liftIO $ readIORef handle
@@ -51,7 +56,7 @@ moveDown index = do
     let newStored = WithParent child $ Just treeWithParent
     liftIO $ writeIORef handle newStored
 
-getAttr :: (MonadReader AppEnv m, MonadIO m) => String -> m [String]
+getAttr :: String -> XmlReaderMonad [String]
 getAttr attr = do
     handle <- getTreeHandle
     stored <- liftIO $ readIORef handle
