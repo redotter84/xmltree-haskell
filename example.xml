@@ -1,24 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<root>
-  <book>
-    <title>The Hitchhiker's Guide to the Galaxy</title>
-    <author>Douglas Adams</author>
-    <publisher>Pan Books</publisher>
-    <year>1979</year>
-    <price>9.99</price>
-  </book>
-  <book>
-    <title>The Lord of the Rings</title>
-    <author>J.R.R. Tolkien</author>
-    <publisher>George Allen &amp; Unwin</publisher>
-    <year>1954</year>
-    <price>12.99</price>
-  </book>
-  <book>
+<bookstore>
+  <book category="fiction" price="19.99" currency="USD">
     <title>The Catcher in the Rye</title>
     <author>J.D. Salinger</author>
-    <publisher>Little, Brown and Company</publisher>
     <year>1951</year>
-    <price>7.99</price>
   </book>
-</root>
+  <book category="nonfiction" price="15.00" currency="USD">
+    <title>The Power of Now</title>
+    <author>Eckhart Tolle</author>
+    <year>1997</year>
+  </book>
+  <book category="fiction" price="12.99" currency="CAD">
+    <title>To Kill a Mockingbird</title>
+    <author>Harper Lee</author>
+    <year>1960</year>
+  </book>
+</bookstore>

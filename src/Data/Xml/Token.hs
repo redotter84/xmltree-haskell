@@ -3,10 +3,11 @@ module Data.Xml.Token where
 import Control.Exception (throw)
 import Data.Char (isSpace)
 import Data.List (elemIndex)
+
 import Data.Xml.Error
 
-data XmlToken a =
-      XmlLiteralToken a
+data XmlToken a
+    = XmlLiteralToken a
     | XmlOpenTagToken a
     | XmlClosingTagToken a
     | XmlDeclarationTagToken a
