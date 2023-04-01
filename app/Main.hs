@@ -1,7 +1,7 @@
 module Main where
 
 import System.Environment (getArgs)
-import Data.Xml.Tree (parseXml)
+import Data.Xml.Parse (parseXml)
 
 getFileName :: IO String
 getFileName = getArgs >>= \args -> case length args of
@@ -11,4 +11,4 @@ getFileName = getArgs >>= \args -> case length args of
 main :: IO ()
 main = do
     rawXml <- getFileName >>= readFile
-    putStrLn $ show $ parseXml rawXml
+    print $ parseXml rawXml

@@ -1,4 +1,4 @@
-module Data.Xml.Tree (parseXml) where
+module Data.Xml.Parse where
 
 import Control.Exception (throw)
 import Data.Char (isSpace)
@@ -10,9 +10,11 @@ type Attribute = (String, String)
 
 type Attributes = [Attribute]
 
+-- | Data structure for XML trees
 data Show a => XmlTree a =
       XmlLiteral a
     | XmlTag String Attributes [XmlTree a]
+    deriving (Eq)
 
 -- | Display an XML tree in a human-readable format
 showTree :: (Show a) => String -> XmlTree a -> String
@@ -28,7 +30,15 @@ showTree prefix (XmlTag name attrs children) = unwords [prefix ++ name, showAttr
 instance (Show a) => Show (XmlTree a) where
     show = showTree "\n"
 
--- | Parse tag attributes (e.g. for `<p class="test" style="meh">` attributes are `{class, test), (style, meh)`)
+-- | Parse an XML tree from a raw text
+parseXml :: String -> XmlTree String
+parseXml raw = case remainder of
+    [] -> tree
+    _  -> throw $ UnparsedData $ "Some data was left unparsed: " ++ show remainder
+    where
+        (tree, remainder) = (makeXmlTreeFromTokens . tokenize) raw
+
+-- | Parse tag attributes (e.g. for @\<p class="test" style="meh">@ attributes are @{class, test), (style, meh)@)
 parseAttrs :: String -> Attributes
 parseAttrs "" = []
 parseAttrs s
@@ -101,11 +111,3 @@ makeXmlTreeFromTokens (token : tokens) = case token of
     XmlOpenTagToken _        -> makeXmlTagFromTokens token tokens
     XmlDeclarationTagToken _ -> makeXmlTreeFromTokens tokens
     _                        -> throw $ UnexpectedToken $ show token
-
--- | Parse an XML tree from a raw text
-parseXml :: String -> XmlTree String
-parseXml raw = case remainder of
-    [] -> tree
-    _  -> throw $ UnparsedData $ "Some data was left unparsed: " ++ show remainder
-    where
-        (tree, remainder) = (makeXmlTreeFromTokens . tokenize) raw
