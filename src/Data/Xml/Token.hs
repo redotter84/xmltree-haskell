@@ -12,26 +12,29 @@ data XmlToken a =
     | XmlDeclarationTagToken a
     deriving (Show)
 
+-- | Parse data of format `<...something here...>`
+--   It can be an opening tag, a closing tag, or an <?xml ?> tag
 tokenizeTag :: String -> (XmlToken String, String)
 tokenizeTag s = case elemIndex '>' s of
-    Nothing -> throw $ ParsingError $ "No closing > found: "
-    Just position -> ((case s !! 1 of
-            '/' -> closingTag position
-            '?' -> declarationTag position
-            otherwise -> openTag position
-        ), remainder position)
+    Nothing -> throw $ ParsingError $ "No closing > found: " ++ s
+    Just position -> (case s !! 1 of
+            '/'   -> closingTag position
+            '?'   -> declarationTag position
+            _     -> openTag position
+        , remainder position)
     where
         openTag = XmlOpenTagToken . drop 1 . flip take s
         closingTag = XmlClosingTagToken . drop 2 . flip take s
-        declarationTag = XmlDeclarationTagToken . drop 2 . flip take s
+        declarationTag = XmlDeclarationTagToken . init . drop 2 . flip take s
         remainder = flip drop s . succ
 
+-- | Make a sequence of tokens from raw XML data
 tokenize :: String -> [XmlToken String]
 tokenize "" = []
 tokenize s
-    | isSpace (s !! 0) = tokenize $ tail s
-    | s !! 0 == '<'    = let (token, remainder) = tokenizeTag s in
+    | isSpace $ head s = tokenize $ tail s
+    | head s == '<'    = let (token, remainder) = tokenizeTag s in
                              token : tokenize remainder
     | otherwise        = case elemIndex '<' s of
         Nothing -> [XmlLiteralToken s]
-        Just position -> (XmlLiteralToken $ take position s) : (tokenize $ drop position s)
+        Just position -> XmlLiteralToken (take position s) : tokenize (drop position s)

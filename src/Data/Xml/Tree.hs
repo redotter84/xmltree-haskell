@@ -1,4 +1,4 @@
-module Data.Xml.Tree where
+module Data.Xml.Tree (parseXml) where
 
 import Control.Exception (throw)
 import Data.Char (isSpace)
@@ -14,11 +14,12 @@ data Show a => XmlTree a =
       XmlLiteral a
     | XmlTag String Attributes [XmlTree a]
 
+-- | Display an XML tree in a human-readable format
 showTree :: (Show a) => String -> XmlTree a -> String
 showTree prefix (XmlLiteral x) = prefix ++ show x
-showTree prefix (XmlTag name attrs children) = intercalate " " [prefix ++ name, showAttrs attrs, showChildren children]
+showTree prefix (XmlTag name attrs children) = unwords [prefix ++ name, showAttrs attrs, showChildren children]
     where
-        showChildren = concat . map (showTree $ prefix ++ "│   ")
+        showChildren = concatMap (showTree $ prefix ++ "│   ")
         showAttrs = wrapAttrs . intercalate ", " . map (\(k, v) -> intercalate ": " [k, v])
         wrap open close = (open ++) . (++ close)
         wrapAttrs [] = ""
@@ -27,10 +28,11 @@ showTree prefix (XmlTag name attrs children) = intercalate " " [prefix ++ name, 
 instance (Show a) => Show (XmlTree a) where
     show = showTree "\n"
 
+-- | Parse tag attributes (e.g. for `<p class="test" style="meh">` attributes are `{class, test), (style, meh)`)
 parseAttrs :: String -> Attributes
 parseAttrs "" = []
 parseAttrs s
-    | isSpace (s !! 0) = (parseAttrs . tail) s
+    | isSpace $ head s = (parseAttrs . tail) s
     | otherwise = case elemIndex '=' s of
         Nothing -> throw $ AttributesParsingError $ "No `=` found: " ++ s
         Just sep ->
@@ -39,24 +41,26 @@ parseAttrs s
                 let (value, remainder) = next sep
                 in (key sep, value) : parseAttrs remainder
             else
-                throw $ AttributesParsingError $ "No `\"` found"
+                throw $ AttributesParsingError $ "No `\"` found" ++ s
     where
         key sep = take sep s
         afterSep sep = drop (sep + 2) s
         next sep =
             let valueWithRemainder = afterSep sep
             in case elemIndex '"' valueWithRemainder of
-                Nothing -> throw $ AttributesParsingError $ "No `\"` found"
+                Nothing -> throw $ AttributesParsingError $ "No `\"` found" ++ valueWithRemainder
                 Just pos -> (take pos valueWithRemainder, drop (succ pos) valueWithRemainder)
 
-parseOpenTag :: XmlToken String -> (String, Attributes)
-parseOpenTag (XmlOpenTagToken tag) = (name, attrs)
+-- | Parse name and attributes from XmlOpenTagToken. Children will be found later
+parseOpenTagToken :: XmlToken String -> (String, Attributes)
+parseOpenTagToken (XmlOpenTagToken tag) = (name, attrs)
     where
-        name = (words tag) !! 0
+        name = head $ words tag
         attrs = case elemIndex ' ' tag of
             Nothing -> []
             Just position -> parseAttrs $ drop (succ position) tag
 
+-- | Find a tag subtree using an approach similar to bracket sequences
 findSubtree :: Int -> [XmlToken String] -> ([XmlToken String], [XmlToken String])
 findSubtree 0 tokens = ([], tokens)
 findSubtree _ [] = ([], [])
@@ -66,37 +70,42 @@ findSubtree balance (token : tokens) = (token : tree, remainder)
             XmlLiteralToken _    -> id
             XmlOpenTagToken _    -> succ
             XmlClosingTagToken _ -> pred
-            otherwise            -> throw $ UnexpectedToken $ show token
+            _                    -> throw $ UnexpectedToken $ show token
         (tree, remainder) = findSubtree (changeBalance balance) tokens
 
-parseXmlForestFromTokens :: [XmlToken String] -> [XmlTree String]
-parseXmlForestFromTokens [] = []
-parseXmlForestFromTokens tokens = tree : parseXmlForestFromTokens remainder
+-- | Given tokens, make as many subtrees (either tags or literals) as possible
+makeXmlForestFromTokens :: [XmlToken String] -> [XmlTree String]
+makeXmlForestFromTokens [] = []
+makeXmlForestFromTokens tokens = tree : makeXmlForestFromTokens remainder
     where
-        (tree, remainder) = parseXmlTreeFromTokens tokens
+        (tree, remainder) = makeXmlTreeFromTokens tokens
 
-parseXmlTagFromTokens :: XmlToken String -> [XmlToken String] -> (XmlTree String, [XmlToken String])
-parseXmlTagFromTokens openTagToken tokens = case lastToken of
+-- | Make an XML tree for <tag>...</tag> structure
+makeXmlTagFromTokens :: XmlToken String -> [XmlToken String] -> (XmlTree String, [XmlToken String])
+makeXmlTagFromTokens openTagToken tokens = case lastToken of
     XmlClosingTagToken x -> if name == x
         then (XmlTag name attrs children, remainder)
         else throw $ UnexpectedToken $ show "Expected tag " ++ name ++ ", got " ++ show lastToken
-    otherwise            -> throw $ UnexpectedToken $ show $ lastToken
+    _                    -> throw $ UnexpectedToken $ show lastToken
     where
-        (name, attrs) = parseOpenTag openTagToken
+        (name, attrs) = parseOpenTagToken openTagToken
         (treeTokens, remainder) = findSubtree 1 tokens
-        children = (parseXmlForestFromTokens . init) treeTokens
+        children = (makeXmlForestFromTokens . init) treeTokens
         lastToken = last treeTokens
 
-parseXmlTreeFromTokens :: [XmlToken String] -> (XmlTree String, [XmlToken String])
-parseXmlTreeFromTokens (token : tokens) = case token of
+-- | Make an XML tree (can be just a subtree) from tokens
+--   It returns the tree itself and unparsed tokens
+makeXmlTreeFromTokens :: [XmlToken String] -> (XmlTree String, [XmlToken String])
+makeXmlTreeFromTokens (token : tokens) = case token of
     XmlLiteralToken x        -> (XmlLiteral x, tokens)
-    XmlOpenTagToken _        -> parseXmlTagFromTokens token tokens
-    XmlDeclarationTagToken _ -> parseXmlTreeFromTokens tokens
-    otherwise                -> throw $ UnexpectedToken $ show token
+    XmlOpenTagToken _        -> makeXmlTagFromTokens token tokens
+    XmlDeclarationTagToken _ -> makeXmlTreeFromTokens tokens
+    _                        -> throw $ UnexpectedToken $ show token
 
-parseXmlTree :: String -> XmlTree String
-parseXmlTree raw = case remainder of
+-- | Parse an XML tree from a raw text
+parseXml :: String -> XmlTree String
+parseXml raw = case remainder of
     [] -> tree
-    otherwise -> throw $ UnparsedData $ "Some data was left unparsed: " ++ show remainder
+    _  -> throw $ UnparsedData $ "Some data was left unparsed: " ++ show remainder
     where
-        (tree, remainder) = (parseXmlTreeFromTokens . tokenize) raw
+        (tree, remainder) = (makeXmlTreeFromTokens . tokenize) raw
