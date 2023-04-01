@@ -49,7 +49,7 @@ execute :: UserInput -> XmlReaderMonad ()
 execute IPrint        = getTree >>= (liftIO . print)
 execute IUp           = moveUp >> execute IPrint
 execute (IDown index) = moveDown index >> execute IPrint
-execute (IAttr attr)  = getAttr attr >>= (liftIO . print . unwords)
+execute (IAttr attr)  = getAttr attr >>= (liftIO . putStrLn . unwords)
 execute IExit         = liftIO exitSuccess
 
 run :: XmlReaderMonad ()

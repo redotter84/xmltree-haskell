@@ -1,18 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bookstore>
-  <book category="fiction" price="19.99" currency="USD">
-    <title>The Catcher in the Rye</title>
-    <author>J.D. Salinger</author>
-    <year>1951</year>
-  </book>
-  <book category="nonfiction" price="15.00" currency="USD">
-    <title>The Power of Now</title>
-    <author>Eckhart Tolle</author>
-    <year>1997</year>
-  </book>
-  <book category="fiction" price="12.99" currency="CAD">
-    <title>To Kill a Mockingbird</title>
-    <author>Harper Lee</author>
-    <year>1960</year>
-  </book>
-</bookstore>
+<employees>
+  <employee id="001">
+    <name>John Smith</name>
+    <age>35</age>
+    <position>Manager</position>
+    <salary currency="USD">75000</salary>
+  </employee>
+  <employee id="002">
+    <name>Jane Doe</name>
+    <age>28</age>
+    <position>Software Engineer</position>
+    <salary currency="EUR">55000</salary>
+  </employee>
+  <employee id="003">
+    <name>Bob Johnson</name>
+    <age>42</age>
+    <position>Marketing Director</position>
+    <salary currency="GBP">85000</salary>
+  </employee>
+</employees>

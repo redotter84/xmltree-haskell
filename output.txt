@@ -1,0 +1,85 @@
+Successfully parsed tree
+<employees>
+│    <employee> {id: 001}
+│    │    <name>
+│    │    │    John Smith
+│    │    <age>
+│    │    │    35
+│    │    <position>
+│    │    │    Manager
+│    │    <salary> {currency: USD}
+│    │    │    75000
+│    <employee> {id: 002}
+│    │    <name>
+│    │    │    Jane Doe
+│    │    <age>
+│    │    │    28
+│    │    <position>
+│    │    │    Software Engineer
+│    │    <salary> {currency: EUR}
+│    │    │    55000
+│    <employee> {id: 003}
+│    │    <name>
+│    │    │    Bob Johnson
+│    │    <age>
+│    │    │    42
+│    │    <position>
+│    │    │    Marketing Director
+│    │    <salary> {currency: GBP}
+│    │    │    85000
+>> down 1
+<employee> {id: 002}
+│    <name>
+│    │    Jane Doe
+│    <age>
+│    │    28
+│    <position>
+│    │    Software Engineer
+│    <salary> {currency: EUR}
+│    │    55000
+>> attr id
+002
+>> down 3
+<salary> {currency: EUR}
+│    55000
+>> attr currency
+EUR
+>> up
+<employee> {id: 002}
+│    <name>
+│    │    Jane Doe
+│    <age>
+│    │    28
+│    <position>
+│    │    Software Engineer
+│    <salary> {currency: EUR}
+│    │    55000
+>> up
+<employees>
+│    <employee> {id: 001}
+│    │    <name>
+│    │    │    John Smith
+│    │    <age>
+│    │    │    35
+│    │    <position>
+│    │    │    Manager
+│    │    <salary> {currency: USD}
+│    │    │    75000
+│    <employee> {id: 002}
+│    │    <name>
+│    │    │    Jane Doe
+│    │    <age>
+│    │    │    28
+│    │    <position>
+│    │    │    Software Engineer
+│    │    <salary> {currency: EUR}
+│    │    │    55000
+│    <employee> {id: 003}
+│    │    <name>
+│    │    │    Bob Johnson
+│    │    <age>
+│    │    │    42
+│    │    <position>
+│    │    │    Marketing Director
+│    │    <salary> {currency: GBP}
+│    │    │    85000

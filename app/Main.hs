@@ -17,6 +17,6 @@ main :: IO ()
 main = do
     raw <- getFileName >>= readFile
     let tree = parseXml raw
-    putStrLn "Loaded tree"
+    putStrLn "Successfully parsed tree"
     print tree
     newAppEnv ">> " tree >>= runReaderT (forever run)
