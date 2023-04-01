@@ -5,10 +5,10 @@ module Rio where
 import Control.Monad.IO.Class (liftIO)
 import Control.Exception (SomeException, try)
 import Data.Foldable (forM_)
+import Data.List (intercalate)
 import System.Exit (exitSuccess)
 import System.IO (hFlush, stdout)
 
-import Data.Xml.Tree (XmlTree)
 import Xml.Handle (XmlReaderMonad, getAttr, getPrompt, getTree, moveDown, moveUp)
 
 data UserInput
@@ -53,7 +53,7 @@ execute :: UserInput -> XmlReaderMonad ()
 execute IPrint        = tryPrint
 execute IUp           = moveUp >> tryPrint
 execute (IDown index) = moveDown index >> tryPrint
-execute (IAttr attr)  = getAttr attr >>= (liftIO . putStrLn . unwords)
+execute (IAttr attr)  = getAttr attr >>= (liftIO . putStrLn . intercalate "\n")
 execute IExit         = liftIO exitSuccess
 
 run :: XmlReaderMonad ()
