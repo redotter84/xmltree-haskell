@@ -16,11 +16,12 @@ newtype XmlHandle = XmlHandle {
 newXmlHandle :: XmlTree -> IO XmlHandle
 newXmlHandle tree = XmlHandle <$> newIORef (WithParent tree Nothing)
 
-newtype AppEnv = AppEnv {
+data AppEnv = AppEnv {
+    prompt    :: String,
     xmlHandle :: XmlHandle
 }
-newAppEnv :: XmlTree -> IO AppEnv
-newAppEnv tree = AppEnv <$> newXmlHandle tree
+newAppEnv :: String -> XmlTree -> IO AppEnv
+newAppEnv invite tree = AppEnv invite <$> newXmlHandle tree
 
 getTreeHandle :: (MonadReader AppEnv m, MonadIO m) => m (IORef XmlTreeWithParent)
 getTreeHandle = asks $ getTreeRef . xmlHandle

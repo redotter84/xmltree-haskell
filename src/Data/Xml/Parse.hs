@@ -21,8 +21,8 @@ parseAttrs :: String -> [XmlAttribute]
 parseAttrs "" = []
 parseAttrs s
     | isSpace $ head s = (parseAttrs . tail) s
-    | otherwise = case elemIndex '=' s of
-        Nothing -> throw $ AttributesParsingError $ "No `=` found: " ++ s
+    | otherwise        = case elemIndex '=' s of
+        Nothing  -> throw $ AttributesParsingError $ "No `=` found: " ++ s
         Just sep ->
             if s !! (sep + 1) == '"'
             then
@@ -31,12 +31,12 @@ parseAttrs s
             else
                 throw $ AttributesParsingError $ "No `\"` found" ++ s
     where
-        key sep = take sep s
+        key sep      = take sep s
         afterSep sep = drop (sep + 2) s
-        next sep =
+        next sep     =
             let valueWithRemainder = afterSep sep
             in case elemIndex '"' valueWithRemainder of
-                Nothing -> throw $ AttributesParsingError $ "No `\"` found" ++ valueWithRemainder
+                Nothing  -> throw $ AttributesParsingError $ "No `\"` found" ++ valueWithRemainder
                 Just pos -> (take pos valueWithRemainder, drop (succ pos) valueWithRemainder)
 
 -- | Parse name and attributes from XmlOpenTagToken. Children will be found later
@@ -45,16 +45,16 @@ parseOpenTagToken (XmlOpenTagToken tag) = (name, attrs)
     where
         name = head $ words tag
         attrs = case elemIndex ' ' tag of
-            Nothing -> []
-            Just position -> parseAttrs $ drop (succ position) tag
+            Nothing  -> []
+            Just pos -> parseAttrs $ drop (succ pos) tag
 
 -- | Find a tag subtree using an approach similar to bracket sequences
 findSubtree :: Int -> [XmlToken String] -> ([XmlToken String], [XmlToken String])
-findSubtree 0 tokens = ([], tokens)
-findSubtree _ [] = ([], [])
+findSubtree 0 tokens                 = ([], tokens)
+findSubtree _ []                     = ([], [])
 findSubtree balance (token : tokens) = (token : tree, remainder)
     where
-        changeBalance = case token of
+        changeBalance     = case token of
             XmlLiteralToken _    -> id
             XmlOpenTagToken _    -> succ
             XmlClosingTagToken _ -> pred
@@ -63,7 +63,7 @@ findSubtree balance (token : tokens) = (token : tree, remainder)
 
 -- | Given tokens, make as many subtrees (either tags or literals) as possible
 makeXmlForestFromTokens :: [XmlToken String] -> [XmlTree]
-makeXmlForestFromTokens [] = []
+makeXmlForestFromTokens []     = []
 makeXmlForestFromTokens tokens = tree : makeXmlForestFromTokens remainder
     where
         (tree, remainder) = makeXmlTreeFromTokens tokens
@@ -76,10 +76,10 @@ makeXmlTagFromTokens openTagToken tokens = case lastToken of
         else throw $ UnexpectedToken $ show "Expected tag " ++ name ++ ", got " ++ show lastToken
     _                    -> throw $ UnexpectedToken $ show lastToken
     where
-        (name, attrs) = parseOpenTagToken openTagToken
+        (name, attrs)           = parseOpenTagToken openTagToken
         (treeTokens, remainder) = findSubtree 1 tokens
-        children = (makeXmlForestFromTokens . init) treeTokens
-        lastToken = last treeTokens
+        children                = (makeXmlForestFromTokens . init) treeTokens
+        lastToken               = last treeTokens
 
 -- | Make an XML tree (can be just a subtree) from tokens
 --   It returns the tree itself and unparsed tokens
