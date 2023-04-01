@@ -1,17 +1,20 @@
-module Data.XmlToken where
+module Data.Xml.Token where
 
+import Control.Exception (throw)
 import Data.Char (isSpace)
 import Data.List (elemIndex)
+import Data.Xml.Error
 
-data XmlToken a = XmlLiteralToken a
-                  | XmlOpenTagToken a
-                  | XmlClosingTagToken a
-                  | XmlDeclarationTagToken a
+data XmlToken a =
+      XmlLiteralToken a
+    | XmlOpenTagToken a
+    | XmlClosingTagToken a
+    | XmlDeclarationTagToken a
     deriving (Show)
 
 tokenizeTag :: String -> (XmlToken String, String)
 tokenizeTag s = case elemIndex '>' s of
-    Nothing -> (XmlOpenTagToken $ drop 1 s, "")
+    Nothing -> throw $ ParsingError $ "No closing > found: "
     Just position -> ((case s !! 1 of
             '/' -> closingTag position
             '?' -> declarationTag position
@@ -29,6 +32,6 @@ tokenize s
     | isSpace (s !! 0) = tokenize $ tail s
     | s !! 0 == '<'    = let (token, remainder) = tokenizeTag s in
                              token : tokenize remainder
-    | otherwise = case elemIndex '<' s of
+    | otherwise        = case elemIndex '<' s of
         Nothing -> [XmlLiteralToken s]
         Just position -> (XmlLiteralToken $ take position s) : (tokenize $ drop position s)

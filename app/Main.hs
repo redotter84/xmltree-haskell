@@ -1,8 +1,7 @@
 module Main where
 
 import System.Environment (getArgs)
-import Data.XmlTree (parseXmlTree)
-import Data.XmlToken
+import Data.Xml.Tree (parseXmlTree)
 
 getFileName :: IO String
 getFileName = getArgs >>= \args -> case length args of

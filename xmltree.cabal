@@ -37,8 +37,9 @@ executable xmltree
 
 library
     exposed-modules:
-        Data.XmlTree
-        , Data.XmlToken
+        Data.Xml.Tree
+        , Data.Xml.Token
+        , Data.Xml.Error
     build-depends:
         base ^>=4.16
     hs-source-dirs:   src
